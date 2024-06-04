@@ -1,0 +1,63 @@
+version: '3.7'
+
+services:
+  rabbitmq:
+    image: rabbitmq:3.10.5-management
+    container_name: message-broker
+    environment:
+      RABBITMQ_DEFAULT_PASS: secret
+      RABBITMQ_DEFAULT_USER: myuser
+    ports:
+      - "5672:5672"
+      - "15672:15672"
+    networks:
+      - acme_network
+
+  reviews-postgres:
+    image: postgres:latest
+    container_name: reviews-postgres
+    environment:
+      POSTGRES_DB: reviews
+      POSTGRES_USER: admin
+      POSTGRES_PASSWORD: admin
+    ports:
+      - "5431:5432"
+    networks:
+      - acme_network
+
+  reviews:
+    build:
+      context: ./reviews
+      dockerfile: Dockerfile
+    ports:
+      - "8082:8082"
+    networks:
+      - acme_network
+    depends_on:
+      - reviews-postgres
+        
+  products-postgres:
+    image: postgres:latest
+    container_name: products-postgres
+    environment:
+      POSTGRES_DB: products
+      POSTGRES_USER: admin
+      POSTGRES_PASSWORD: admin
+    ports:
+      - "5432:5432"
+    networks:
+      - acme_network
+
+  products:
+    build:
+      context: ./products
+      dockerfile: Dockerfile
+    ports:
+      - "8081:8081"
+    networks:
+      - acme_network
+    depends_on:
+      - products-postgres
+
+networks:
+  acme_network:

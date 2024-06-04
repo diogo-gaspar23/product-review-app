@@ -1,0 +1,4 @@
+com\isep\acme\ACMEApplicationTests.class
+com\isep\acme\services\ReviewServiceImplIntegrationTest.class
+com\isep\acme\controllers\ProductControllerE2ETest.class
+com\isep\acme\model\ReviewTest.class

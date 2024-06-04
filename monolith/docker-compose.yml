@@ -1,0 +1,27 @@
+version: '3.7'
+
+# The different services that make up our "network" of containers
+services:
+  neo:
+    # The image to use
+    image: neo4j:latest
+    container_name: my-neo4j-container
+    environment:
+      # username/password
+      NEO4J_AUTH: neo4j/my-password
+      NEO4J_ACCEPT_LICENSE_AGREEMENT: "yes"
+    # map the ports so we can check the db server is up
+    ports:
+      - "7474:7474"
+      - "7687:7687"
+    # mounting a named volume to the container to track db data
+    volumes:
+      - neo4j_data:/data/
+    networks:
+      - neo4j_network
+
+networks:
+  neo4j_network:
+
+volumes:
+  neo4j_data:

@@ -1,0 +1,27 @@
+# The different services that make up our "network" of containers
+services:
+  reviews-postgres:
+    image: postgres:latest
+    container_name: reviews-postgres
+    environment:
+      POSTGRES_DB: reviews
+      POSTGRES_USER: admin
+      POSTGRES_PASSWORD: admin
+    ports:
+      - "5431:5432"
+    networks:
+      - acme_network
+
+  reviews:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - "8082:8082"
+    networks:
+      - acme_network
+    depends_on:
+      - reviews-postgres
+
+networks:
+  acme_network:

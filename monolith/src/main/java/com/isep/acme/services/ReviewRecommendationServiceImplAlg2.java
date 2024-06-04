@@ -1,0 +1,103 @@
+package com.isep.acme.services;
+
+import com.isep.acme.model.Review;
+import com.isep.acme.model.Vote;
+import com.isep.acme.model.dto.ReviewDTO;
+import com.isep.acme.model.dto.ReviewMapper;
+import org.springframework.context.annotation.Profile;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.stereotype.Service;
+
+import java.util.*;
+
+@Profile("recommended2")
+@Service
+public class ReviewRecommendationServiceImplAlg2 implements ReviewRecommendationService {
+    @Override
+    public List<ReviewDTO> getRecommendedReviews(List<Review> reviews) {
+
+        if (reviews.isEmpty()) {
+            return Collections.emptyList();
+        }
+
+        if (SecurityContextHolder.getContext().getAuthentication().getPrincipal() == "anonymousUser") return null;
+
+        final String[] user = SecurityContextHolder.getContext().getAuthentication().getName().split(",");
+
+        long userId = Long.parseLong(user[0]);
+
+        List<Review> recommendedReviews = new ArrayList<>();
+
+        Map<Long, String> requestUserVotedReviews = getVotedReviews(reviews, userId);
+
+        for (Review review : reviews) {
+            if (requestUserVotedReviews.get(review.getIdReview()) == null || review.getUser().getUserId() == userId) {
+                continue;
+            }
+            Map<Long, String> currUserVotedReviews = getVotedReviews(reviews, review.getUser().getUserId(), requestUserVotedReviews);
+
+            int percentage = calculateEqualVotePercentage(requestUserVotedReviews, currUserVotedReviews);
+
+            if (percentage > 50) {
+                recommendedReviews.add(review);
+            }
+        }
+
+        return ReviewMapper.toDtoList(recommendedReviews);
+    }
+
+    private int calculateEqualVotePercentage(Map<Long, String> requestUserVotedReviews, Map<Long, String> currUserVotedReviews) {
+        final int totalReviews = currUserVotedReviews.size();
+        int sameVoteReviews = 0;
+
+        for (Long reviewId : currUserVotedReviews.keySet()) {
+            if (Objects.equals(requestUserVotedReviews.get(reviewId), currUserVotedReviews.get(reviewId))) {
+                sameVoteReviews++;
+            }
+        }
+
+        float ratio = (float) sameVoteReviews / (float) totalReviews;
+
+        return (int) (ratio * 100);
+    }
+
+    private Map<Long, String> getVotedReviews(List<Review> reviews, long userId) {
+        Map<Long, String> votedReviews = new HashMap<>();
+        for (Review review : reviews) {
+            checkVotes(userId, votedReviews, review);
+        }
+
+        return votedReviews;
+    }
+
+    private Map<Long, String> getVotedReviews(List<Review> reviews, long userId, Map<Long, String> requestUserVotedReviews) {
+        Map<Long, String> votedReviews = new HashMap<>();
+        for (Review review : reviews) {
+            if (requestUserVotedReviews.get(review.getIdReview()) == null) {
+                continue;
+            }
+
+            checkVotes(userId, votedReviews, review);
+        }
+
+        return votedReviews;
+    }
+
+    private void checkVotes(long userId, Map<Long, String> votedReviews, Review review) {
+        List<Vote> upVotes = review.getUpVote();
+        List<Vote> downVotes = review.getDownVote();
+        for (Vote upVote : upVotes) {
+            if (userId == upVote.getUserID()) {
+                votedReviews.put(review.getIdReview(), "upvote");
+                return;
+            }
+        }
+
+        for (Vote downVote : downVotes) {
+            if (userId == downVote.getUserID()) {
+                votedReviews.put(review.getIdReview(), "downvote");
+                return;
+            }
+        }
+    }
+}
