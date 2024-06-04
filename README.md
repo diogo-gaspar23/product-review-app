@@ -1,6 +1,6 @@
 # Product Management and Review Application
 
-This is an academic project consisting of a migration of a monolithic Java Spring REST application into a microservice architecture using RabbitMQ as the message broker between microservices. 
+This is an academic project (originally developed in a Bitbucket repository) consisting of a migration of a monolithic Java Spring REST application into a microservice architecture using RabbitMQ as the message broker between microservices. 
 
 A layered architecture was used for all the services, looking to fulfill the SOLID principles.
 
